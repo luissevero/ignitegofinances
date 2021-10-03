@@ -14,7 +14,7 @@ export const Container = styled.View`
 
 export const Header = styled.View`
     width: 100%;
-    height: ${RFPercentage(42)}px;
+    height: ${RFPercentage(40)}px;
     background-color: ${({theme}) => theme.colors.primary};
     flex-direction: row;
     align-items: flex-start;
