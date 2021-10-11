@@ -8,11 +8,11 @@ export default {
 		success_light: 'rgba(18, 164, 84, 0.5)',
 		attention: '#e83f5b',
 		attention_light: 'rgba(232, 63, 91, 0.5)',
-		shape: '#fff',
+		shape: '#fcfcfc',
 		title: '#363f5f',
 		text: '#969cb2',
 		text_dark: '#040404',
-		background: '#f0f2f5'
+		background: '#faf0fa'
 	},
 
 	fonts: {

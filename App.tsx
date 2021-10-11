@@ -8,6 +8,7 @@ import { ThemeProvider } from 'styled-components'
 
 import { NavigationContainer } from '@react-navigation/native'
 import { AppRoutes } from './src/routes/app.routes'
+import { Signin } from './src/screens/Signin'
 
 import {
 	useFonts,
@@ -16,6 +17,8 @@ import {
 	Poppins_700Bold
 } from '@expo-google-fonts/poppins'
 import theme from './src/global/styles/theme'
+
+import { AuthProvider } from './src/contexts/AuthContext'
 
 export default function App() {
 	
@@ -33,7 +36,9 @@ export default function App() {
 		<ThemeProvider theme={theme}>
 			<NavigationContainer>
 				<StatusBar barStyle='light-content' />
-				<AppRoutes />
+				<AuthProvider>
+					<Signin />
+				</AuthProvider>
 			</NavigationContainer>
 		</ThemeProvider>
 	)
