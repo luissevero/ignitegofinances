@@ -2,10 +2,13 @@ import React, {
     ReactNode, 
     createContext, 
     useContext, 
-    useState 
+    useState,
+    useEffect 
 } from 'react'
 
 import * as AuthSession from 'expo-auth-session'
+import * as AppleAuthentication from 'expo-apple-authentication'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 interface AuthProviderProps {
     children: ReactNode
@@ -20,6 +23,9 @@ interface User {
 interface IAuthContextData {
     user: User
     signInWithGoogle(): Promise<void>
+    signInWithApple(): Promise<void>
+    signOut(): Promise<void>
+    isLoading: boolean
 
 }
 
@@ -30,17 +36,33 @@ interface AuthorizationResponse {
     type: string
 }
 
+const { REDIRECT_URI } = process.env
+const { CLIENT_ID } = process.env
 const AuthContext = createContext({} as IAuthContextData)
 
 function AuthProvider({ children }: AuthProviderProps){
     
     const [user, setUser] = useState<User>({} as User)
+    const [isLoading, setIsLoading] = useState(true)
+    const userStorageKey = '@gofinances:user'
+
+    useEffect(() => {
+        async function loadUserStorageData(){
+            const userStoraged = await AsyncStorage.getItem(userStorageKey)
+            if(userStoraged){
+                const userLogged = JSON.parse(userStoraged) as User
+                setUser(userLogged)
+            }
+            setIsLoading(false)
+        }
+
+        loadUserStorageData()
+    }, [])
 
     async function signInWithGoogle(){
+        
         try {
 
-            const CLIENT_ID = '996326087078-s7u5e5esgukevrkl1ho41fbv76s93kdh.apps.googleusercontent.com'
-            const REDIRECT_URI = 'https://auth.expo.io/@luissevero/gofinances'
             const RESPONSE_TYPE = 'token'
             const SCOPE = encodeURI('profile email')
 
@@ -51,23 +73,62 @@ function AuthProvider({ children }: AuthProviderProps){
             if(type === 'success'){
                 const response = await fetch(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${params.access_token}`)
                 const userInfo = await response.json()
-                setUser({
-                    id: userInfo.id,
+                const userLogged: User = {
+                    id: String(userInfo.id),
                     email: userInfo.email,
                     name: userInfo.given_name,
                     photo: userInfo.picture
-                })
+                }
+                setUser(userLogged)
+                await AsyncStorage.setItem(userStorageKey, JSON.stringify(userLogged))
             }
 
         }catch(error){
-            throw new Error(error)
+            throw new Error(error as string)
         }
     }
+
+    async function signInWithApple(){
+        try {
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL
+                ]
+            })
+
+            if(credential){
+                const name = credential.fullName!.givenName!
+                const photo =  `https://ui-avatars.com/api/?name=${name}&length=1`
+                const userLogged = {
+                    id: String(credential.user),
+                    email: credential.email!,
+                    name: credential.fullName!.givenName!,
+                    photo
+                }
+                setUser(userLogged)
+                await AsyncStorage.setItem(userStorageKey, JSON.stringify(userLogged))
+            }
+        }catch (error){
+            throw new Error(error as string)
+        }
+        
+    }
+
+    async function signOut(){
+        setUser({} as User)
+        await AsyncStorage.removeItem(userStorageKey)
+    }
+
+    
 
     return (
         <AuthContext.Provider value={{ 
             user, 
-            signInWithGoogle 
+            signInWithGoogle,
+            signInWithApple,
+            signOut,
+            isLoading 
         }}>
             { children }
         </AuthContext.Provider>

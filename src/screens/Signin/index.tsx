@@ -1,5 +1,9 @@
-import React, { useContext } from 'react'
-import { Alert } from 'react-native'
+import React, { useState } from 'react'
+import { 
+    ActivityIndicator, 
+    Alert, 
+    Platform 
+} from 'react-native'
 import { RFValue } from 'react-native-responsive-fontsize'
 
 import AppleSvg from '../../assets/apple.svg'
@@ -17,19 +21,36 @@ import {
     FooterWrapper
 } from './styles'
 
+import { useTheme } from 'styled-components'
 import { useAuth } from '../../contexts/AuthContext'
 
 export function Signin(){
 
-    const { signInWithGoogle } = useAuth()
+    const [isLoading, setIsLoading] = useState(false)
+
+    const { signInWithGoogle, signInWithApple } = useAuth()
+    const theme = useTheme()
     
     async function handleSignInWithGoogle(){
         try {
-            await signInWithGoogle()
+            setIsLoading(true)
+            return await signInWithGoogle()
         }catch(error){
             console.log(error)
             Alert.alert('Não foi possível conectar à conta Google')
+        } 
+        setIsLoading(false)
+    }
+
+    async function handleSignInWithApple(){
+        try {
+            setIsLoading(true)
+            return await signInWithApple()
+        } catch(error){
+            console.log(error)
+            Alert.alert('Não foi possível conectar à conta Apple')
         }
+        setIsLoading(false)
     }
 
     return (
@@ -54,14 +75,22 @@ export function Signin(){
                         svg={GoogleSvg}
                         onPress={handleSignInWithGoogle}
                     />
+                    {Platform.OS === 'ios' &&
                     <SignInSocialButton 
                         title="Entrar com Apple"
                         svg={AppleSvg}
+                        onPress={handleSignInWithApple}
                     />
+                    }
                 </FooterWrapper>
-
+                {isLoading && 
+                    <ActivityIndicator 
+                        style={{marginTop: 18}}
+                        color={theme.colors.shape} 
+                        size="large" 
+                    />
+                }
             </Footer>
-
         </Container>
     )
 }

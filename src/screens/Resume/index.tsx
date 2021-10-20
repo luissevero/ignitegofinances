@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react'
+import React, { useState, useCallback } from 'react'
 import { ActivityIndicator } from 'react-native'
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -25,6 +25,7 @@ import { ptBR } from 'date-fns/locale'
 import { useFocusEffect } from '@react-navigation/native'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useTheme } from 'styled-components'
+import { useAuth } from '../../contexts/AuthContext'
 
 
 interface TransactionData {
@@ -55,6 +56,7 @@ export function Resume(){
     }, [selectedDate]))
 
     const theme = useTheme()
+    const { user } = useAuth()
 
     function handleDateChange(action: 'next' | 'prev'){
         if(action === 'next'){
@@ -69,7 +71,7 @@ export function Resume(){
 
     async function loadData() {
         setIsLoading(true)
-        const dataKey = '@gofinances:transactions'
+        const dataKey = `@gofinances:transactions_user:${user.id}`
         const response = await AsyncStorage.getItem(dataKey)
         const responseFormatted = response ? JSON.parse(response) : []
         
